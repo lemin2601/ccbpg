@@ -303,7 +303,8 @@
           },
           "label": {
             "__id__": 6
-          }
+          },
+          "periodUpdate": 1
         }
       ],
       "_scale": {

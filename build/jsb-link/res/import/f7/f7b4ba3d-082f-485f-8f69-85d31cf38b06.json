@@ -105,15 +105,15 @@
         },
         "_srcBlendFactor": 1,
         "_useOriginalSize": false,
-        "_string": "this is menu",
-        "_N$string": "this is menu",
+        "_string": "Demo xong",
+        "_N$string": "Demo xong",
         "_N$horizontalAlign": 1,
         "_N$verticalAlign": 1
       }
     ],
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 213.42,
+      "width": 204.55,
       "height": 40
     },
     "_position": {

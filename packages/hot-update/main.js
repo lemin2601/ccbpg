@@ -149,7 +149,7 @@ function doneZipFile(path){
 }
 function processGenManifest(){
     Editor.log("----processGenManifest----");
-    let manifest = manifestTemp;
+    let manifest =  JSON.parse(JSON.stringify(manifestTemp));//Object.assign({}, manifestTemp);
     let src = pathSrcBuild;
     let dest = getPathRemoteAssets();
     //update manifest
@@ -243,7 +243,7 @@ var copyRecursiveSync = function(src, dest) {
 
 function readDir (dir, obj) {
     if(!fs.existsSync(dir)){
-        Editor.error("Done exists File:" + dir);
+        Editor.error("Don't exists File:" + dir);
         return;
     }
     var stat = fs.statSync(dir);

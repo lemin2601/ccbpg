@@ -262,7 +262,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 213.42,
+      "width": 204.55,
       "height": 40
     },
     "_anchorPoint": {
@@ -309,8 +309,8 @@
     "_srcBlendFactor": 1,
     "_dstBlendFactor": 771,
     "_useOriginalSize": false,
-    "_string": "this is menu",
-    "_N$string": "this is menu",
+    "_string": "Demo xong",
+    "_N$string": "Demo xong",
     "_fontSize": 40,
     "_lineHeight": 40,
     "_enableWrapText": true,

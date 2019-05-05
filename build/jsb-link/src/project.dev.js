@@ -14824,7 +14824,8 @@ window.__require = function e(t, n, r) {
     cc._RF.push(module, "b88edBS9JtJx6QRo/i6OI+p", "EventName");
     "use strict";
     var EventName = {
-      UPDATE_CHECK_BEFORE_DONE: "up_check_done"
+      UPDATE_CHECK_BEFORE_DONE: "up_check_done",
+      HOT_UPDATE_DONE: "up_hot_update_done"
     };
     module.exports = EventName;
     cc._RF.pop();
@@ -14834,6 +14835,7 @@ window.__require = function e(t, n, r) {
     cc._RF.push(module, "0a0c8hKzQ1PFIcMW6cmy5DK", "HotUpdate");
     "use strict";
     var crypto = require("crypto");
+    var EventName = require("EventName");
     var customManifestStr = JSON.stringify({
       packageUrl: "http://192.168.50.220:5555/tutorial-hot-update/remote-assets/",
       remoteManifestUrl: "http://192.168.50.220:5555/tutorial-hot-update/remote-assets/project.manifest",
@@ -15117,7 +15119,7 @@ window.__require = function e(t, n, r) {
 
          case jsb.EventAssetsManager.NEW_VERSION_FOUND:
           cc.log("New version found, please try to update.");
-          this.scheduleOnce(this.hotUpdate, 0);
+          setTimeout(this.hotUpdate.bind(this), 0);
           break;
 
          default:
@@ -15178,15 +15180,11 @@ window.__require = function e(t, n, r) {
           this._am.setEventCallback(null);
           this._updateListener = null;
           var searchPaths = jsb.fileUtils.getSearchPaths();
-          var newPaths = this._am.getLocalManifest().getSearchPaths();
-          console.log(JSON.stringify(newPaths));
-          Array.prototype.unshift.apply(searchPaths, newPaths);
           cc.sys.localStorage.setItem("HotUpdateSearchPaths", JSON.stringify(searchPaths));
-          jsb.fileUtils.setSearchPaths(searchPaths);
-          cc.audioEngine.stopAll();
-          setTimeout(function() {
-            cc.game.restart();
-          }, 0);
+          cc.log("searchPaths:" + JSON.stringify(searchPaths));
+          var _event = new Event(EventName.HOT_UPDATE_DONE);
+          _event.resultHotUpdate = 2;
+          cc.systemEvent.dispatchEvent(_event);
         }
       },
       loadCustomManifest: function loadCustomManifest() {
@@ -15260,6 +15258,7 @@ window.__require = function e(t, n, r) {
     });
     cc._RF.pop();
   }, {
+    EventName: "EventName",
     crypto: 56
   } ],
   Log: [ function(require, module, exports) {
@@ -15317,12 +15316,16 @@ window.__require = function e(t, n, r) {
       },
       sendCheckBeforeUpdate: function sendCheckBeforeUpdate(callbackDone) {
         var callback = function callback(status, responseText) {
-          if (4 === status && "" !== responseText) try {
+          if (200 === status && "" !== responseText) try {
             var config = JSON.parse(responseText);
-            config["again"] && (MConfig.needCheckBeforeUpdate = config["again"]);
-            config["continue"] && (MConfig.continueIfFailedUpdate = config["continue"]);
-            config["update"] && (MConfig.needUpdate = config["update"]);
-          } catch (e) {}
+            cc.log("config parse:" + config);
+            null != config["again"] && (MConfig.needCheckBeforeUpdate = config["again"]);
+            null != config["continue"] && (MConfig.continueIfFailedUpdate = config["continue"]);
+            null != config["update"] && (MConfig.needUpdate = config["update"]);
+          } catch (e) {
+            cc.error("failed parse:" + responseText);
+          }
+          cc.log("update :" + MConfig.needUpdate);
           var event = new Event(EventName.UPDATE_CHECK_BEFORE_DONE);
           event.status = status;
           cc.systemEvent.dispatchEvent(event);
@@ -15438,12 +15441,13 @@ window.__require = function e(t, n, r) {
           visible: false,
           default: true
         },
-        periodUpdate: 1,
+        periodUpdate: 3,
         dt: {
           visible: false,
           default: 0
         },
-        hotUpdate: HotUpdate
+        hotUpdate: HotUpdate,
+        countReTryUpdate: 0
       },
       onLoad: function onLoad() {
         cc.log("on Load");
@@ -15452,6 +15456,7 @@ window.__require = function e(t, n, r) {
         this.curProcessIndex = LoadingStep.NONE;
         this.hotUpdate = new HotUpdate();
         cc.systemEvent.on(EventName.UPDATE_CHECK_BEFORE_DONE, this.afterCheckUpdateResource, this);
+        cc.systemEvent.on(EventName.HOT_UPDATE_DONE, this.afterUpdateRemoteAssetsDone, this);
       },
       start: function start() {
         var progressBar = this.progressBar.getComponent(cc.ProgressBar);
@@ -15467,7 +15472,7 @@ window.__require = function e(t, n, r) {
         var md5 = crypto.createHash("md5").update("abc").digest("hex");
         cc.log(md5);
         this.label.getComponent(cc.Label).string = md5;
-        cc.log("------");
+        cc.log("---version 26 SceneLoading---");
       },
       update: function update(dt) {
         this.dt += dt;
@@ -15481,6 +15486,7 @@ window.__require = function e(t, n, r) {
       onDestroy: function onDestroy() {
         cc.log("onDestroy");
         cc.systemEvent.off(EventName.UPDATE_CHECK_BEFORE_DONE, this.afterCheckUpdateResource, this);
+        cc.systemEvent.off(EventName.HOT_UPDATE_DONE, this.afterUpdateRemoteAssetsDone, this);
       },
       setFree: function setFree(b) {
         this.isFree = b;
@@ -15492,12 +15498,36 @@ window.__require = function e(t, n, r) {
       checkUpdateResource: function checkUpdateResource() {
         MConfig.needCheckBeforeUpdate ? MGame.sendCheckBeforeUpdate() : this.setFree(true);
       },
+      afterUpdateRemoteAssetsDone: function afterUpdateRemoteAssetsDone(event) {
+        var resultHotUpdate = event.resultHotUpdate;
+        switch (resultHotUpdate) {
+         case 2:
+          cc.audioEngine.stopAll();
+          setTimeout(function() {
+            cc.game.restart();
+          }, 0);
+          break;
+
+         case 1:
+          this.setFree(true);
+          break;
+
+         case 0:
+          this.countReTryUpdate++;
+          this.countReTryUpdate > 1 && (MConfig.continueIfFailedUpdate ? this.setFree(true) : cc.game.end());
+          break;
+
+         case -1:
+          MConfig.continueIfFailedUpdate ? this.setFree(true) : cc.game.end();
+        }
+      },
       updateResource: function updateResource() {
         cc.log("update Resource");
-        this.hotUpdate.init();
-        cc.log("udpate here");
-        this.hotUpdate.hotUpdate();
-        this.isFree = true;
+        if (MConfig.needUpdate) {
+          this.hotUpdate.init();
+          cc.log("udpate here .....updated ... ... ... ..1..");
+          this.hotUpdate.checkUpdate();
+        } else this.isFree = true;
       },
       afterUpdateResource: function afterUpdateResource() {
         this.isFree = true;
@@ -15540,9 +15570,10 @@ window.__require = function e(t, n, r) {
         }
       },
       updateUI: function updateUI() {
-        return;
-        var total;
-        var percent;
+        this.label.getComponent(cc.Label).string = LoadingStep[this.curProcessIndex];
+        var total = Object.keys(LoadingStep).length;
+        var percent = (this.curProcessIndex + this.periodUpdate / 1) / total;
+        this.progressBar.getComponent(cc.ProgressBar).progress = percent;
       }
     });
     var LoadingStep = cc.Enum({

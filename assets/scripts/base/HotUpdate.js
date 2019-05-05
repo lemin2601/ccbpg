@@ -1,4 +1,6 @@
 var crypto = require('crypto');
+var EventName = require('EventName');
+
 // Custom manifest removed the following assets:
 // 1. res/raw-assets/2a/2a40e5e7-4c4a-4350-9e5d-76757755cdd2.png
 // 2. res/raw-assets/2d/2d86a854-63c4-4b90-8b88-a4328b8526c2.png
@@ -312,7 +314,7 @@ cc.Class({
                 break;
             case jsb.EventAssetsManager.NEW_VERSION_FOUND: //3
                 cc.log('New version found, please try to update.');
-                this.scheduleOnce(this.hotUpdate,0);
+                setTimeout(this.hotUpdate.bind(this),0);
                 // this.panel.checkBtn.active = false;
                 // this.panel.fileProgress.progress = 0;
                 // this.panel.byteProgress.progress = 0;
@@ -373,18 +375,38 @@ cc.Class({
             this._updateListener = null;
             // Prepend the manifest's search path
             var searchPaths = jsb.fileUtils.getSearchPaths();
-            var newPaths = this._am.getLocalManifest().getSearchPaths();
-            console.log(JSON.stringify(newPaths));
-            Array.prototype.unshift.apply(searchPaths, newPaths);
-            // This value will be retrieved and appended to the default search path during game startup,
-            // please refer to samples/js-tests/main.js for detailed usage.
-            // !!! Re-add the search paths in main.js is very important, otherwise, new scripts won't take effect.
+            // var newPaths = this._am.getLocalManifest().getSearchPaths();
+            // var isContainNewPaths = false;
+            // for(let i = 0; i < searchPaths.length; i++){
+            //     if(newPaths === searchPaths[i]){
+            //         isContainNewPaths = true;
+            //     }
+            // }
+            // if(!isContainNewPaths){
+            //     cc.log("c!ontained New Paths");
+            //     cc.log(JSON.stringify(searchPaths));
+            //     searchPaths.unshift(newPaths);
+            //     cc.log(JSON.stringify(searchPaths));
+            //
+            // }else{
+            //     cc.log("contained New Paths");
+            // }
+            // // console.log(JSON.stringify(newPaths));
+            // // Array.prototype.unshift.apply(searchPaths, newPaths);
+            // // This value will be retrieved and appended to the default search path during game startup,
+            // // please refer to samples/js-tests/main.js for detailed usage.
+            // // !!! Re-add the search paths in main.js is very important, otherwise, new scripts won't take effect.
             cc.sys.localStorage.setItem('HotUpdateSearchPaths', JSON.stringify(searchPaths));
-            jsb.fileUtils.setSearchPaths(searchPaths);
-            cc.audioEngine.stopAll();
-            setTimeout(function(){
-                cc.game.restart();
-            },0);
+            cc.log("searchPaths:" + JSON.stringify(searchPaths));
+            // jsb.fileUtils.setSearchPaths(searchPaths);
+
+            let event = new Event(EventName.HOT_UPDATE_DONE);
+            event.resultHotUpdate = 2;
+            cc.systemEvent.dispatchEvent(event);
+            // cc.audioEngine.stopAll();
+            // setTimeout(function(){
+            //     cc.game.restart();
+            // },0);
         }
     },
     loadCustomManifest: function(){

@@ -19,23 +19,25 @@ let MGame = {
 
     sendCheckBeforeUpdate:function(callbackDone){
         let callback = function(status, responseText){
-            if(status === 4 && responseText !== ''){
+            if(status === 200 && responseText !== ''){
                 try{
                     let config = JSON.parse(responseText);
+                    cc.log("config parse:" + config);
 
-                    if(config["again"]){
+                    if(config["again"] != null){
                         MConfig.needCheckBeforeUpdate = config["again"];
                     }
-                    if(config["continue"]){
+                    if(config["continue"] != null){
                         MConfig.continueIfFailedUpdate = config["continue"];
                     }
-                    if(config["update"]){
+                    if(config["update"] != null){
                         MConfig.needUpdate = config["update"];
                     }
                 }catch(e){
-
+                    cc.error("failed parse:" + responseText);
                 }
             }
+            cc.log("update :" + MConfig.needUpdate);
             let event = new Event(EventName.UPDATE_CHECK_BEFORE_DONE);
             event.status = status;
             cc.systemEvent.dispatchEvent(event);

@@ -193,7 +193,26 @@ else if (window.jsb) {
 
 if (window.jsb) {
     var hotUpdateSearchPaths = localStorage.getItem('HotUpdateSearchPaths');
+
+    cc.log("HotUpdateSearchPaths:" + JSON.stringify(hotUpdateSearchPaths));
     if (hotUpdateSearchPaths) {
+        var arrSearchPaths = JSON.parse(hotUpdateSearchPaths);
+        if(arrSearchPaths.length>2){
+            var __isLoadNewest = localStorage.getItem('__isLoadNewest');
+            cc.log("__isLoadNewest:" + __isLoadNewest);
+            if(__isLoadNewest){
+                if(__isLoadNewest === 'false'){
+                    localStorage.setItem('__isLoadNewest','true');
+                    setTimeout(function(){
+                        cc.game.restart();
+                    },0);
+                }else{
+                    localStorage.setItem('__isLoadNewest','false');
+                }
+            }else{
+                localStorage.setItem('__isLoadNewest','false');
+            }
+        }
         jsb.fileUtils.setSearchPaths(JSON.parse(hotUpdateSearchPaths));
     }
 }

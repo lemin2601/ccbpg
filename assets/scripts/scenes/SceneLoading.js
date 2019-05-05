@@ -28,13 +28,14 @@ cc.Class({
             visible     : false,
             default     : true
         },
-        periodUpdate   : 1,
+        periodUpdate   : 3,
         dt             : {
             visible: false,
             default: 0
         },
         /** @type {HotUpdate}*/
         hotUpdate:HotUpdate,
+        countReTryUpdate:0,
     },
     // LIFE-CYCLE CALLBACKS:
     onLoad(){
@@ -44,6 +45,7 @@ cc.Class({
         this.curProcessIndex = LoadingStep.NONE;
         this.hotUpdate = new HotUpdate();
         cc.systemEvent.on(EventName.UPDATE_CHECK_BEFORE_DONE, this.afterCheckUpdateResource, this);
+        cc.systemEvent.on(EventName.HOT_UPDATE_DONE, this.afterUpdateRemoteAssetsDone, this);
 
     },
     start(){
@@ -61,7 +63,7 @@ cc.Class({
         var md5 = crypto.createHash('md5').update("abc").digest('hex');
         cc.log(md5);
         this.label.getComponent(cc.Label).string = md5;
-        cc.log("------");
+        cc.log("---version 26 SceneLoading---");
     },
     update(dt){
         this.dt += dt;
@@ -75,6 +77,7 @@ cc.Class({
     onDestroy(){
         cc.log("onDestroy");
         cc.systemEvent.off(EventName.UPDATE_CHECK_BEFORE_DONE, this.afterCheckUpdateResource, this);
+        cc.systemEvent.off(EventName.HOT_UPDATE_DONE, this.afterUpdateRemoteAssetsDone, this);
     },
     setFree(b){
         this.isFree = b;
@@ -94,20 +97,63 @@ cc.Class({
             this.setFree(true);
         }
     },
+    /**
+     *
+     * @param event{Event}
+     */
+    afterUpdateRemoteAssetsDone:function(event){
+        //2-need restart
+        //1-newest, passed
+        //0- can re-try update
+        //-1 - failed updated
+        var resultHotUpdate = event.resultHotUpdate;
+        switch(resultHotUpdate){
+            case 2:
+                cc.audioEngine.stopAll();
+                setTimeout(function(){
+                    cc.game.restart();
+                },0);
+                break;
+            case 1:
+                this.setFree(true);
+                break;
+            case 0:
+                this.countReTryUpdate ++;
+                if(this.countReTryUpdate > 1){
+                    if(MConfig.continueIfFailedUpdate){
+                        this.setFree(true);
+                    }else{
+                        cc.game.end();
+                    }
+                }
+                break;
+            case -1:
+                if(MConfig.continueIfFailedUpdate){
+                    this.setFree(true);
+                }else{
+                    cc.game.end();
+                }
+                break;
+        }
+    },
     updateResource(){
         cc.log("update Resource");
+        if(MConfig.needUpdate){
+            this.hotUpdate.init();
+            cc.log("udpate here .....updated ... ... ... ..1..");
+            this.hotUpdate.checkUpdate();
+            // this.hotUpdate.hotUpdate();
+        }else{
+            this.isFree = true;
+        }
         //khoi tao
         //check update
         //  -> chua co
         //  -> da co
         //update
 
-        this.hotUpdate.init();
-        cc.log("udpate here .....");
-        // this.hotUpdate.checkUpdate();
-        this.hotUpdate.hotUpdate();
 
-        this.isFree = true;
+
     },
     afterUpdateResource(){
         this.isFree = true;
@@ -147,7 +193,6 @@ cc.Class({
         }
     },
     updateUI(){
-        return;
         this.label.getComponent(cc.Label).string = LoadingStep[this.curProcessIndex];
 
         let total = Object.keys(LoadingStep).length;
