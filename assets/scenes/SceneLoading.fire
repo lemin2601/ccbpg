@@ -604,6 +604,13 @@
     "progressBar": {
       "__id__": 3
     },
+    "label": {
+      "__id__": 8
+    },
+    "curProcessIndex": 0,
+    "periodUpdate": 1,
+    "dt": 0,
+    "hotUpdate": null,
     "_id": "bef2LtRQhEJraLj0aN75C7"
   }
 ]
