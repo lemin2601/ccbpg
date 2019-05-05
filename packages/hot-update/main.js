@@ -82,7 +82,7 @@ function updateFromConfigFile(){
                     var ip = allIpAddress[nameInterface];
                     if(ip == null){ throw  "Can't get Ip Local with name:" + nameInterface +"| all:" + JSON.stringify(allIpAddress)}
                     manifestTemp.version = configDev.version;
-                    manifestTemp.packageUrl = "http://" + ip + "/" + configDev.packageUrlExtra;
+                    manifestTemp.packageUrl = "http://" + ip +":" + configDev.portUrlExtra + "/" + configDev.packageUrlExtra;
                     break;
                 case "pri":
                     if(config.pri == null){throw "config.pri missing"}
@@ -149,7 +149,7 @@ function processGenManifest(){
     Editor.log("----processGenManifest----");
     let manifest = manifestTemp;
     let src = pathSrcBuild;
-    let dest = pathRemoteAssets;
+    let dest = getPathRemoteAssets();
     //update manifest
     for(let i = 0; i < listRelativePathGenManifest.length; i++){
         let relativePathGen = listRelativePathGenManifest[i];
@@ -186,7 +186,7 @@ function processCopyRemoteAssets(){
     Editor.log("----processCopyRemoteAssets----");
     //copy all listRelativePathGenManifest from srcBuildPath to pathRemoteAssets
     let src = pathSrcBuild;
-    let dest = pathRemoteAssets;
+    let dest = getPathRemoteAssets();
     for(let i = 0; i < listRelativePathGenManifest.length; i++){
         let relativePath = listRelativePathGenManifest[i];
         copyRecursiveSync(path.join(src, relativePath),path.join(dest, relativePath));
@@ -200,6 +200,12 @@ function process(){
 function finished(){
     Editor.log('finished');
     callBackWhenFinish && callBackWhenFinish();
+}
+
+function getPathRemoteAssets(){
+    let dest = pathRemoteAssets +"/" + mode;
+    mkdirSync(dest);
+    return dest;
 }
 var copyRecursiveSync = function(src, dest) {
     var exists = fs.existsSync(src);
