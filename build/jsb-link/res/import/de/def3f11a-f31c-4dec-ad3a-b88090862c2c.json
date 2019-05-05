@@ -1,0 +1,8 @@
+{
+  "__type__": "cc.JsonAsset",
+  "_name": "config",
+  "json": {
+    "url_services": "192.168.1.6",
+    "game_name": "game_test"
+  }
+}

@@ -1,0 +1,2 @@
+#! /bin/bash
+python ./../../../tools/easyTools/http_server.py -port 8001 -path /Users/leemin/cocos/creator/deploy/baseProject
