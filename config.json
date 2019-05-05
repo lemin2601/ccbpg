@@ -5,7 +5,7 @@
         "pathRemoteAssets":"/Users/leemin/cocos/creator/deploy/baseProject/remote-assets/",
         "dev":{
             "nameInterface":"en0",
-            "version":"1.0.0",
+            "version":"1.0.1",
             "packageUrl":"http://192.168.1.6/",
             "portUrlExtra":8001,
             "packageUrlExtra":"remote-assets/dev/"

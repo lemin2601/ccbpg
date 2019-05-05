@@ -300,21 +300,22 @@ cc.Class({
     checkCb: function(event){
         cc.log('Code: ' + event.getEventCode());
         switch(event.getEventCode()){
-            case jsb.EventAssetsManager.ERROR_NO_LOCAL_MANIFEST:
-                this.panel.info.string = "No local manifest file found, hot update skipped.";
+            case jsb.EventAssetsManager.ERROR_NO_LOCAL_MANIFEST: //0
+                cc.log("No local manifest file found, hot update skipped.");
                 break;
-            case jsb.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST:
-            case jsb.EventAssetsManager.ERROR_PARSE_MANIFEST:
-                this.panel.info.string = "Fail to download manifest file, hot update skipped.";
+            case jsb.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST: // 1
+            case jsb.EventAssetsManager.ERROR_PARSE_MANIFEST: // 2
+                cc.log("Fail to download manifest file, hot update skipped.");
                 break;
-            case jsb.EventAssetsManager.ALREADY_UP_TO_DATE:
-                this.panel.info.string = "Already up to date with the latest remote version.";
+            case jsb.EventAssetsManager.ALREADY_UP_TO_DATE: //4
+                cc.log("Already up to date with the latest remote version.");
                 break;
-            case jsb.EventAssetsManager.NEW_VERSION_FOUND:
-                this.panel.info.string = 'New version found, please try to update.';
-                this.panel.checkBtn.active = false;
-                this.panel.fileProgress.progress = 0;
-                this.panel.byteProgress.progress = 0;
+            case jsb.EventAssetsManager.NEW_VERSION_FOUND: //3
+                cc.log('New version found, please try to update.');
+                this.scheduleOnce(this.hotUpdate,0);
+                // this.panel.checkBtn.active = false;
+                // this.panel.fileProgress.progress = 0;
+                // this.panel.byteProgress.progress = 0;
                 break;
             default:
                 return;
@@ -327,45 +328,37 @@ cc.Class({
         var needRestart = false;
         var failed = false;
         switch(event.getEventCode()){
-            case jsb.EventAssetsManager.ERROR_NO_LOCAL_MANIFEST:
-                this.panel.info.string = 'No local manifest file found, hot update skipped.';
+            case jsb.EventAssetsManager.ERROR_NO_LOCAL_MANIFEST://0
+                cc.log('No local manifest file found, hot update skipped.');
                 failed = true;
                 break;
-            case jsb.EventAssetsManager.UPDATE_PROGRESSION:
-                this.panel.byteProgress.progress = event.getPercent();
-                this.panel.fileProgress.progress = event.getPercentByFile();
-                this.panel.fileLabel.string = event.getDownloadedFiles() + ' / ' + event.getTotalFiles();
-                this.panel.byteLabel.string = event.getDownloadedBytes() + ' / ' + event.getTotalBytes();
-                var msg = event.getMessage();
-                if(msg){
-                    this.panel.info.string = 'Updated file: ' + msg;
-                    // cc.log(event.getPercent()/100 + '% : ' + msg);
-                }
-                break;
-            case jsb.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST:
-            case jsb.EventAssetsManager.ERROR_PARSE_MANIFEST:
-                this.panel.info.string = 'Fail to download manifest file, hot update skipped.';
+            case jsb.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST://1
+            case jsb.EventAssetsManager.ERROR_PARSE_MANIFEST://2
+                cc.log('Fail to download manifest file, hot update skipped.');
                 failed = true;
                 break;
+            case jsb.EventAssetsManager.UPDATE_PROGRESSION://5
+                cc.log(event.getPercent() +"|" + event.getPercentByFile() +"|" + event.getDownloadedFiles() +"|" + event.getTotalFiles() +"|" + event.getDownloadedBytes() +"|" + event.getTotalBytes() +"|" + event.getMessage());
+                break;
+
             case jsb.EventAssetsManager.ALREADY_UP_TO_DATE:
-                this.panel.info.string = 'Already up to date with the latest remote version.';
+                cc.log('Already up to date with the latest remote version.');
                 failed = true;
                 break;
             case jsb.EventAssetsManager.UPDATE_FINISHED:
-                this.panel.info.string = 'Update finished. ' + event.getMessage();
+                cc.log('Update finished. ' + event.getMessage());
                 needRestart = true;
                 break;
             case jsb.EventAssetsManager.UPDATE_FAILED:
-                this.panel.info.string = 'Update failed. ' + event.getMessage();
-                this.panel.retryBtn.active = true;
+                cc.log('Update failed. ' + event.getMessage());
                 this._updating = false;
                 this._canRetry = true;
                 break;
             case jsb.EventAssetsManager.ERROR_UPDATING:
-                this.panel.info.string = 'Asset update error: ' + event.getAssetId() + ', ' + event.getMessage();
+                cc.log('Asset update error: ' + event.getAssetId() + ', ' + event.getMessage());
                 break;
             case jsb.EventAssetsManager.ERROR_DECOMPRESS:
-                this.panel.info.string = event.getMessage();
+                cc.log(event.getMessage());
                 break;
             default:
                 break;
@@ -389,7 +382,9 @@ cc.Class({
             cc.sys.localStorage.setItem('HotUpdateSearchPaths', JSON.stringify(searchPaths));
             jsb.fileUtils.setSearchPaths(searchPaths);
             cc.audioEngine.stopAll();
-            cc.game.restart();
+            setTimeout(function(){
+                cc.game.restart();
+            },0);
         }
     },
     loadCustomManifest: function(){
@@ -408,20 +403,37 @@ cc.Class({
         }
     },
     checkUpdate: function(){
+        if(!cc.sys.isNative){
+            cc.log("is not native, so not have check update");
+            return;
+        }
         if(this._updating){
-            this.panel.info.string = 'Checking or updating ...';
+            cc.log('Checking or updating ...');
             return;
         }
         if(this._am.getState() === jsb.AssetsManager.State.UNINITED){
             // Resolve md5 url
-            var url = this.manifestUrl.nativeUrl;
+            cc.log("this.manifestUrl");
+            // var filePath = cc.url.raw("project.manifest");//from res/raw-assets/
+            var textValue = jsb.fileUtils.getStringFromFile('project.manifest');
+            // var jsonConfig = JSON.parse(textValue);
+            // cc.log(filePath);
+            cc.log(textValue);
+
+            cc.log(JSON.stringify(this.manifestUrl));
+            var url = 'project.manifest';
             if(cc.loader.md5Pipe){
                 url = cc.loader.md5Pipe.transformURL(url);
             }
+            cc.log("url:" + url);
             this._am.loadLocalManifest(url);
+            /** @type {cc.Manifest}*/
+            var manifest =this._am.getLocalManifest();
+            cc.log(JSON.stringify(manifest.getPackageUrl()));
+            cc.log(JSON.stringify(manifest.getManifestFileUrl()));
         }
         if(!this._am.getLocalManifest() || !this._am.getLocalManifest().isLoaded()){
-            this.panel.info.string = 'Failed to load local manifest ...';
+            cc.log('Failed to load local manifest ...');
             return;
         }
         this._am.setEventCallback(this.checkCb.bind(this));
@@ -433,15 +445,15 @@ cc.Class({
             this._am.setEventCallback(this.updateCb.bind(this));
             if(this._am.getState() === jsb.AssetsManager.State.UNINITED){
                 // Resolve md5 url
-                var url = this.manifestUrl.nativeUrl;
+                var url = 'project.manifest';//this.manifestUrl.nativeUrl;
                 if(cc.loader.md5Pipe){
                     url = cc.loader.md5Pipe.transformURL(url);
                 }
                 this._am.loadLocalManifest(url);
             }
             this._failCount = 0;
+            cc.log("HOTUPDATE: UPDATEing");
             this._am.update();
-            this.panel.updateBtn.active = false;
             this._updating = true;
         }
     },

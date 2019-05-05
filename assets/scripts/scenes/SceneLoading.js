@@ -103,6 +103,8 @@ cc.Class({
         //update
 
         this.hotUpdate.init();
+        cc.log("udpate here .....");
+        // this.hotUpdate.checkUpdate();
         this.hotUpdate.hotUpdate();
 
         this.isFree = true;

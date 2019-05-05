@@ -2,7 +2,7 @@ let MConfig = {
     needCheckBeforeUpdate:true,
     needUpdate:true,
     continueIfFailedUpdate:true,
-    urlServices:"http://192.168.1.6",
+    urlServices:"http://192.168.100.85",
     portServices:"8001",
     gameName:"game_test"
 };
