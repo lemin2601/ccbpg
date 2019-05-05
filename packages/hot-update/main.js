@@ -142,7 +142,9 @@ function doneZipFile(path){
     }
     Editor.log("doneZipFile:" + path);
     if(countZipFileDone >= listRelativePathZip.length){
-        processGenManifest();
+        setTimeout(function(){
+            processGenManifest();
+        },0);
     }
 }
 function processGenManifest(){
@@ -180,7 +182,9 @@ function processGenManifest(){
         Editor.log('Version successfully generated =>' + destVersion);
     });
 
-    processCopyRemoteAssets();
+    setTimeout(function(){
+        processCopyRemoteAssets();
+    },0);
 }
 function processCopyRemoteAssets(){
     Editor.log("----processCopyRemoteAssets----");
@@ -189,6 +193,7 @@ function processCopyRemoteAssets(){
     let dest = getPathRemoteAssets();
     for(let i = 0; i < listRelativePathGenManifest.length; i++){
         let relativePath = listRelativePathGenManifest[i];
+        Editor.log('copyRecursiveSync =>' + src +"->" + dest);
         copyRecursiveSync(path.join(src, relativePath),path.join(dest, relativePath));
     }
     Editor.log('Coppy resource successfully =>' + dest);
@@ -203,7 +208,7 @@ function finished(){
 }
 
 function getPathRemoteAssets(){
-    let dest = pathRemoteAssets +"/" + mode;
+    let dest = pathRemoteAssets + mode;
     mkdirSync(dest);
     return dest;
 }
@@ -211,21 +216,41 @@ var copyRecursiveSync = function(src, dest) {
     var exists = fs.existsSync(src);
     var stats = exists && fs.statSync(src);
     var isDirectory = exists && stats.isDirectory();
-    if (exists && isDirectory) {
-        fs.mkdirSync(dest);
-        fs.readdirSync(src).forEach(function(childItemName) {
-            copyRecursiveSync(path.join(src, childItemName),
-                path.join(dest, childItemName));
-        });
-    } else {
-        fs.linkSync(src, dest);
+    try{
+        if (exists && isDirectory) {
+            // fs.mkdirSync(dest);
+            mkdirSync(dest);
+            fs.readdirSync(src).forEach(function(childItemName) {
+                copyRecursiveSync(path.join(src, childItemName),
+                    path.join(dest, childItemName));
+            });
+        } else {
+            try {
+                fs.linkSync(src, dest);
+            } catch(e) {
+                if (e.code == 'EEXIST' ) {
+                    fs.unlinkSync(dest);
+                    fs.linkSync(src, dest);
+                }else{
+                    throw e
+                }
+            }
+        }
+    }catch(e){
+        Editor.error(e);
     }
+
 };
 
 function readDir (dir, obj) {
+    if(!fs.existsSync(dir)){
+        Editor.error("Done exists File:" + dir);
+        return;
+    }
     var stat = fs.statSync(dir);
+    var size, md5, compressed, relative;
     if (stat.isDirectory()) {
-        var subpaths = fs.readdirSync(dir), subpath, size, md5, compressed, relative;
+        var subpaths = fs.readdirSync(dir), subpath;
         for (var i = 0; i < subpaths.length; ++i) {
             if (subpaths[i][0] === '.') {
                 continue;
@@ -475,22 +500,26 @@ function onBuildFinished(options, callback){
     Editor.log('Hot-update onBuildFinished');
     // Editor.log('Building ' + options.platform + ' to ' + options.dest); // you can display a log in the Console panel
 
-    //updateCallBackFinish => updatePathFromBuild => updateFromConfigFile => initFileZip => initFileGenManifest => process
-    updateCallBackFinish(callback);
-    updatePathFromBuild(options.project,options.dest);
-    updateFromConfigFile();
-    if(isEnable){
-        initFileZip();
-        initFileGenManifest();
+    try{
+        //updateCallBackFinish => updatePathFromBuild => updateFromConfigFile => initFileZip => initFileGenManifest => process
+        updateCallBackFinish(callback);
+        updatePathFromBuild(options.project,options.dest);
+        updateFromConfigFile();
+        if(isEnable){
+            initFileZip();
+            initFileGenManifest();
 
-        //processZipFile => doneZipFile => processGenManifest => processCopyRemoteAssets => finished
-        process();
-    }else{
-        Editor.log("====>Passed not update manifest...");
+            //processZipFile => doneZipFile => processGenManifest => processCopyRemoteAssets => finished
+            process();
+        }else{
+            Editor.log("====>Passed not update manifest...");
+            callback();
+        }
+    }catch(e){
+        Editor.error(e);
         callback();
     }
-
-    callback();
+    // callback();
 }
 
 
