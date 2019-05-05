@@ -120,6 +120,7 @@ android.applicationVariants.all { variant ->
         copy {
             from "${buildDir}/../../../../../main.js"
             from "${buildDir}/../../../../../project.json"
+            from "${buildDir}/../../../../../project.manifest"
             into "${buildDir}/intermediates/assets/${variant.dirName}"
         }
     }
