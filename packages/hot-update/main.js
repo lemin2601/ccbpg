@@ -193,7 +193,6 @@ function processCopyRemoteAssets(){
     let dest = getPathRemoteAssets();
     for(let i = 0; i < listRelativePathGenManifest.length; i++){
         let relativePath = listRelativePathGenManifest[i];
-        Editor.log('copyRecursiveSync =>' + src +"->" + dest);
         copyRecursiveSync(path.join(src, relativePath),path.join(dest, relativePath));
     }
     Editor.log('Coppy resource successfully =>' + dest);
