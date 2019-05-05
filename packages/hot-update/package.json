@@ -18,5 +18,9 @@
     "title": "hot-update",
     "width": 400,
     "height": 300
+  },
+  "dependencies": {
+    "archiver": "^3.0.0",
+    "zip-folder": "^1.0.0"
   }
 }
