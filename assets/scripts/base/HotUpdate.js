@@ -300,14 +300,17 @@ cc.Class({
         }
     },
     checkCb: function(event){
-        cc.log('Code: ' + event.getEventCode());
-        switch(event.getEventCode()){
+        let code = event.getEventCode();
+        cc.log('checkCb Code: ' + code);
+        switch(code){
             case jsb.EventAssetsManager.ERROR_NO_LOCAL_MANIFEST: //0
-                cc.log("No local manifest file found, hot update skipped.");
-                break;
             case jsb.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST: // 1
             case jsb.EventAssetsManager.ERROR_PARSE_MANIFEST: // 2
+            case jsb.EventAssetsManager.FAIL_TO_UPDATE: // 2
                 cc.log("Fail to download manifest file, hot update skipped.");
+                let event = new Event(EventName.HOT_UPDATE_DONE);
+                event.resultHotUpdate = -1;
+                cc.systemEvent.dispatchEvent(event);
                 break;
             case jsb.EventAssetsManager.ALREADY_UP_TO_DATE: //4
                 cc.log("Already up to date with the latest remote version.");
@@ -369,6 +372,10 @@ cc.Class({
             this._am.setEventCallback(null);
             this._updateListener = null;
             this._updating = false;
+
+            let event = new Event(EventName.HOT_UPDATE_DONE);
+            event.resultHotUpdate = this._canRetry?0:-1;
+            cc.systemEvent.dispatchEvent(event);
         }
         if(needRestart){
             this._am.setEventCallback(null);
