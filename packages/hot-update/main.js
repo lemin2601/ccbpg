@@ -499,26 +499,30 @@ function onBuildFinished(options, callback){
     Editor.log('Hot-update onBuildFinished');
     // Editor.log('Building ' + options.platform + ' to ' + options.dest); // you can display a log in the Console panel
 
-    try{
-        //updateCallBackFinish => updatePathFromBuild => updateFromConfigFile => initFileZip => initFileGenManifest => process
-        updateCallBackFinish(callback);
-        updatePathFromBuild(options.project,options.dest);
-        updateFromConfigFile();
-        if(isEnable){
-            initFileZip();
-            initFileGenManifest();
+    if(options.actualPlatform === 'android'){
+        try{
+            //updateCallBackFinish => updatePathFromBuild => updateFromConfigFile => initFileZip => initFileGenManifest => process
+            updateCallBackFinish(callback);
+            updatePathFromBuild(options.project,options.dest);
+            updateFromConfigFile();
+            if(isEnable){
+                initFileZip();
+                initFileGenManifest();
 
-            //processZipFile => doneZipFile => processGenManifest => processCopyRemoteAssets => finished
-            process();
-        }else{
-            Editor.log("====>Passed not update manifest...");
+                //processZipFile => doneZipFile => processGenManifest => processCopyRemoteAssets => finished
+                process();
+            }else{
+                Editor.log("====>Passed not update manifest...");
+                callback();
+            }
+        }catch(e){
+            Editor.error(e);
             callback();
         }
-    }catch(e){
-        Editor.error(e);
+    }else{
+        Editor.log("====>Passed not update manifest... :" + options.actualPlatform);
         callback();
     }
-    // callback();
 }
 
 

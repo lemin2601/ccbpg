@@ -13,7 +13,7 @@
   "excludeScenes": [],
   "fb-instant-games": {},
   "includeAnySDK": false,
-  "includeSDKBox": false,
+  "includeSDKBox": true,
   "inlineSpriteFrames": false,
   "inlineSpriteFrames_native": true,
   "jailbreakPlatform": false,
@@ -36,7 +36,7 @@
   },
   "startScene": "98db2f7e-945d-4457-802d-c9b6d201ad16",
   "title": "baseProject",
-  "webOrientation": "auto",
+  "webOrientation": "landscape",
   "wechatgame": {
     "REMOTE_SERVER_ROOT": "",
     "appid": "wx6ac3f5090a6b99c5",
