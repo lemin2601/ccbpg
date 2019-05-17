@@ -5,6 +5,9 @@
       "play_turn": {
         "example": "Edgar played their move"
       }
-    }
+    },
+    "orientation": "PORTRAIT",
+    "override_web_orientation": "LANDSCAPE",
+    "navigation_menu_version": "NAV_FLOATING"
   }
 }
