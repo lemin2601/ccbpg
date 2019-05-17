@@ -1,8 +1,10 @@
 var EventName = require("EventName");
 let MGame = {
+    /** @type {MAds}*/
+    Ads:null,
     load:function(){
-        MConfig.needCheckBeforeUpdate = MStorage.getBoolean(MStorageKey.NEED_CHECK_UPDATE,true);
-        MConfig.needUpdate = MStorage.getBoolean(MStorageKey.NEED_CHECK_UPDATE,true);
+        MConfig.needCheckBeforeUpdate = MStorage.getBoolean(MStorageKey.NEED_CHECK_UPDATE,false);
+        MConfig.needUpdate = MStorage.getBoolean(MStorageKey.NEED_CHECK_UPDATE,false);
         if(cc.sys.isBrowser){
             MConfig.needCheckBeforeUpdate = false;
             MConfig.needUpdate = false;

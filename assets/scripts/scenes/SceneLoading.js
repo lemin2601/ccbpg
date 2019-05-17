@@ -28,7 +28,7 @@ cc.Class({
             visible     : false,
             default     : true
         },
-        periodUpdate   : 3,
+        periodUpdate   : 0.2,
         dt             : {
             visible: false,
             default: 0
@@ -165,7 +165,9 @@ cc.Class({
     afterLoadDone(){
         cc.director.preloadScene("SceneMenu", function(completedCount, totalCount, item){
         }, function(error){
-            cc.director.loadScene('SceneMenu');
+            setTimeout(function(){
+                cc.director.loadScene('SceneMenu');
+            },0);
         });
     },
     processNext(){
