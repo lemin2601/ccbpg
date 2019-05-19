@@ -1,0 +1,22 @@
+digraph "fsm" {
+  "idle";
+  "select_1";
+  "select_2";
+  "pause";
+  "win";
+  "timeout";
+  "check";
+  "idle" -> "select_1" [ label=" play " ];
+  "select_1" -> "select_2" [ label=" select " ];
+  "select_2" -> "select_2" [ label=" select " ];
+  "select_1" -> "pause" [ label=" pause " ];
+  "select_2" -> "pause" [ label=" pause " ];
+  "pause" -> "select_1" [ label=" resume " ];
+  "select_2" -> "select_1" [ label=" de-select " ];
+  "select_2" -> "win" [ label=" win " ];
+  "timeout" -> "idle" [ label=" t_end-game " ];
+  "win" -> "idle" [ label=" t_end-game " ];
+  "select_1" -> "timeout" [ label=" t_timeout " ];
+  "select_2" -> "timeout" [ label=" t_timeout " ];
+  "check" -> "timeout" [ label=" t_timeout " ];
+}

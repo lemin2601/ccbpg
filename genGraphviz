@@ -1,0 +1,2 @@
+#! /bin/bash
+dot -Tpng ./graphviz/SceneGame.dot -o ./graphviz/SceneGame.png
