@@ -252,13 +252,13 @@ mixin(Config.prototype, {
       this.timeOut[name] = {};
     }
     this.timeOut[name][from] = timeOut;
-    cc.log(JSON.stringify(this.timeOut));
+    // cc.log(JSON.stringify(this.timeOut));
   },
   addEnableAddQueue:function(name,enableAddQueue){
     if(enableAddQueue !== this.defaults.enableQueue){
       this.enableQueue[name] = enableAddQueue;
     }
-    cc.log(JSON.stringify(this.enableQueue));
+    // cc.log(JSON.stringify(this.enableQueue));
   },
   addTransitionLifecycleNames: function(name) {
     this.lifecycle.onBefore[name] = camelize.prepended('onBefore', name);
@@ -650,6 +650,13 @@ var PublicMethods = {
   allStates:           function()            { return this._fsm.allStates()                                   },
   onInvalidTransition: function(t, from, to) { return this._fsm.onInvalidTransition(t, from, to)              },
   onPendingTransition: function(t, from, to) { return this._fsm.onPendingTransition(t, from, to)              },
+  do:                  function(transition, args)  {
+    let t = camelize(transition);
+    if(this[t]){
+      return this[t].apply(this,[].slice.call(arguments,1));
+    }
+    cc.error("can't find transition:" + transition);
+  },
 }
 
 var PublicProperties = {
@@ -727,7 +734,12 @@ StateMachine.defaults = {
     name: 'init',
     from: 'none'
   }
-}
+};
+StateMachine.camelize = camelize;
+StateMachine.keyMethod = function(prepend,lavel){
+  return camelize.prepended(prepend,lavel);
+};
+
 
 //===============================================================================================
 
